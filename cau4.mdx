@@ -1,45 +1,21 @@
-WITH
-  -- Count the number of days for "Good" air quality
-  MEMBER [Measures].[Good Days] AS
-    COUNT(
-      FILTER(
-        [Tbl Dim Date].[Hierarchy].[Day].MEMBERS,
-        [TBL dim category].[Category].CURRENTMEMBER.NAME  = "Good"
-      )
+--cau 4
+WITH 
+  MEMBER [Measures].[Days] AS Count(
+    NonEmpty(
+      CrossJoin(
+        {[Tbl Dim States].[State Name].&[Hawaii], [Tbl Dim States].[State Name].&[Alaska], [Tbl Dim States].[State Name].&[Illinois], [Tbl Dim States].[State Name].&[Delaware]},
+        {[Tbl Dim Date].[Date Id].Members}
+      ),
+      [Measures].[Category Count]
     )
-
-  -- Count the number of days for "Moderate" air quality
-  MEMBER [Measures].[Moderate Days] AS
-    COUNT(
-      FILTER(
-        [Tbl Dim Date].[Hierarchy].[Day].MEMBERS,
-        [TBL dim category].[Category].CURRENTMEMBER.NAME  = "Moderate"
-      )
-    )
-
-  -- Count the number of days for "Unhealthy" air quality
-  MEMBER [Measures].[Unhealthy Days] AS
-    COUNT(
-      FILTER(
-        [Tbl Dim Date].[Hierarchy].[Day].MEMBERS,
-        [TBL dim category].[Category].CURRENTMEMBER.NAME = "Unhealthy"
-      )
-    )
-
+  )
 SELECT
-  {
-    [Measures].[Good Days],
-    [Measures].[Moderate Days],
-    [Measures].[Unhealthy Days]
-  } ON COLUMNS,
-
-  NON EMPTY 
-    CROSSJOIN(
-      -- Filter for the four states of interest
-
-        [Tbl Dim States].[State Name].MEMBERS,
-
-      [Tbl Dim Counties].[County Name].MEMBERS
-    ) ON ROWS
-
-FROM [olab-cube]
+  NON EMPTY { [Measures].[Days] } ON COLUMNS,
+  NON EMPTY {
+    CrossJoin(
+      {[Tbl Dim States].[State Name].&[Hawaii], [Tbl Dim States].[State Name].&[Alaska], [Tbl Dim States].[State Name].&[Illinois], [Tbl Dim States].[State Name].&[Delaware]},
+      {[Tbl Dim Counties].[County Name].Members},
+      {[Tbl Dim category].[Category].Members} 
+    )
+  } ON ROWS
+FROM [olab-cube];
