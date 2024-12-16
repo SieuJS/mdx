@@ -1,0 +1,45 @@
+WITH
+  -- Count the number of days for "Good" air quality
+  MEMBER [Measures].[Good Days] AS
+    COUNT(
+      FILTER(
+        [Tbl Dim Date].[Hierarchy].[Day].MEMBERS,
+        [TBL dim category].[Category].CURRENTMEMBER.NAME  = "Good"
+      )
+    )
+
+  -- Count the number of days for "Moderate" air quality
+  MEMBER [Measures].[Moderate Days] AS
+    COUNT(
+      FILTER(
+        [Tbl Dim Date].[Hierarchy].[Day].MEMBERS,
+        [TBL dim category].[Category].CURRENTMEMBER.NAME  = "Moderate"
+      )
+    )
+
+  -- Count the number of days for "Unhealthy" air quality
+  MEMBER [Measures].[Unhealthy Days] AS
+    COUNT(
+      FILTER(
+        [Tbl Dim Date].[Hierarchy].[Day].MEMBERS,
+        [TBL dim category].[Category].CURRENTMEMBER.NAME = "Unhealthy"
+      )
+    )
+
+SELECT
+  {
+    [Measures].[Good Days],
+    [Measures].[Moderate Days],
+    [Measures].[Unhealthy Days]
+  } ON COLUMNS,
+
+  NON EMPTY 
+    CROSSJOIN(
+      -- Filter for the four states of interest
+
+        [Tbl Dim States].[State Name].MEMBERS,
+
+      [Tbl Dim Counties].[County Name].MEMBERS
+    ) ON ROWS
+
+FROM [olab-cube]

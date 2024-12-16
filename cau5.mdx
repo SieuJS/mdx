@@ -1,0 +1,41 @@
+WITH
+  -- Calculate the sum of AQI for each quarter
+  MEMBER [Measures].[Sum AQI for Quarter] AS
+    SUM(
+      [Tbl Dim Date].[Hierarchy].[Day].MEMBERS,  -- Sum AQI over all days in the quarter
+      [Measures].[Aqi]
+    )
+
+  -- Calculate the count of days for each quarter
+  MEMBER [Measures].[Count of Days in Quarter] AS
+    COUNT(
+      [Tbl Dim Date].[Hierarchy].[Day].MEMBERS  -- Count the number of days in the quarter
+    )
+
+  -- Calculate the mean AQI by dividing the sum by the count of days
+  MEMBER [Measures].[Mean AQI] AS
+    IIF(
+      [Measures].[Count of Days in Quarter] > 0,  -- Avoid division by zero
+      [Measures].[Sum AQI for Quarter] / [Measures].[Count of Days in Quarter],
+      NULL
+    )
+
+SELECT
+  {
+    [Measures].[Mean AQI]  -- Show the mean AQI for the selected states and quarters
+  } ON COLUMNS,
+
+  NON EMPTY 
+    CROSSJOIN(
+      -- Filter for the four states of interest: Hawaii, Alaska, Illinois, Delaware
+      FILTER(
+        [Tbl Dim States].[State Name].MEMBERS,
+        [Tbl Dim States].[State Name].CurrentMember.Name = "Hawaii" 
+        OR [Tbl Dim States].[State Name].CurrentMember.Name = "Alaska"
+        OR [Tbl Dim States].[State Name].CurrentMember.Name = "Illinois"
+        OR [Tbl Dim States].[State Name].CurrentMember.Name = "Delaware"
+      ),
+      [Tbl Dim Date].[Hierarchy].[Quarter].MEMBERS  -- Include all quarters
+    ) ON ROWS
+
+FROM [olab-cube]

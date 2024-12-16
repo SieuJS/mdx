@@ -1,0 +1,10 @@
+-- cau 1
+
+SELECT 
+  { [Measures].[Maximum AQI], [Measures].[Minimum Aqi] } ON COLUMNS,
+
+([Tbl Dim Date].[Year].MEMBERS,
+	[Tbl Dim Date].[Hierarchy].[Quarter].MEMBERS,
+[Tbl Dim Counties - State].[State Name].MEMBERS
+	  )ON ROWS
+FROM [olab-cube];

@@ -1,0 +1,31 @@
+WITH 
+  -- Calculate the sum of AQI for the set of states
+  MEMBER [Measures].[Sum AQI] AS
+    SUM(
+      [Measures].[Aqi]
+    )
+
+  -- Calculate the count of AQI for the set of states
+  MEMBER [Measures].[Count AQI] AS
+[Measures].[Tbl Fact Aqi Count]
+
+  -- Calculate the Mean AQI as Sum AQI divided by Count AQI
+  MEMBER [Measures].[Mean AQI] AS
+    IIF(
+      [Measures].[Count AQI] > 0, 
+      [Measures].[Sum AQI] / [Measures].[Count AQI], 
+      NULL
+    )
+SELECT 
+  {
+    [Measures].[Mean AQI]
+  } ON COLUMNS,
+
+  NON EMPTY 
+    CROSSJOIN(
+      [Tbl Dim States].[State Name].MEMBERS,
+	  [Tbl Dim Date].[Year].MEMBERS,
+      [Tbl Dim Date].[Hierarchy].[Quarter].MEMBERS
+    ) ON ROWS
+
+FROM [olab-cube]

@@ -1,0 +1,22 @@
+WITH  
+  -- Calculate the number of very unhealthy AQI days (AQI >= 201) for each State and County
+  MEMBER [Measures].[Num of Very Unhealthy AQI Days] AS
+    SUM(
+      [Tbl Dim Date].[Hierarchy].[Day].MEMBERS, 
+      IIF(
+        [Measures].[Aqi] >= 201, 1, 0  -- Count 1 for days where AQI >= 201
+      )
+    )
+
+SELECT 
+  { 
+    [Measures].[Num of Very Unhealthy AQI Days]  -- Show the calculated measure for very unhealthy AQI days
+  } ON COLUMNS,
+
+  NON EMPTY 
+    CROSSJOIN(
+      [Tbl Dim States].[State Name].MEMBERS,  -- Show State Name
+      [Tbl Dim Counties].[County Name].MEMBERS  -- Show County Name
+    ) ON ROWS
+
+FROM [olab-cube]
